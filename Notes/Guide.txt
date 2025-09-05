@@ -1,0 +1,727 @@
+Tech Stack Used:
+    next.js (website)
+    shadcn ui 
+    arcjet (security)
+    inngest (scheduling)
+    clerk (user authentication, user management)
+    supabase-postgre (database)
+
+
+SETUP:
+
+    1. CREATE A PROJECT:
+        -> npx create-next-app@latest
+            1. name the project
+            2. answer in yes or no
+                typescript(does type checking to catch errors early on, say no if you just want plain javascript)
+
+                ESlint (checks for bad formatting or potential bugs, keeps the code clean and consistent)
+
+                tailwind css (modern and efficient UI styling)
+
+                src/ (Saying Yes puts all main files inside a /src folder(eg. src/pages/index.js),helps organize large codebases better)
+
+                app router (Uses the /app directory instead of the older /pages for routing. Gives advanced features like layout nesting, server components, and better performance.)
+
+                turbopack (new, faster bundler for web dev)
+            
+            now necessary packages will get installed.
+    2. RUN THE PROJECT
+        -> npm run dev
+            it will give the localhost website
+            The code for the webpage is int the app folder, in page.js
+
+        -> npx shadcn@latest init
+            install shadcn UI, which is built on top of tailwind css, it has premade components which we can import  
+
+        -> npx shadcn@latest add badge calendar card checkbox drawer dropdown-menu input popover progress select switch table tooltip
+
+            install the components that will be used like this, the codes for these components will go inside /components/UI
+
+    3. Go to /layout.js and remove the fonts if you want to have your own, and in Metadata give your project name and description
+
+    4. in layout.js you give the page layout for the website; header, footer etc. <main></main> tag is used to show the main content of a website. {children} is a react prop which represents whatever is passed inside it.
+
+    5. Create a header.jsx file inside components
+        with extention you can write "rafce" to get the default code snippet ("import React from 'react', const Header=()=>{return(<div></div>)} export default Header") code block will be generated.
+
+        now import that header to layout.js file
+        after writing <Header>, press ctrl+space and it will automatically give import header from @components/header.jsx line to add to the layout.js file
+
+
+2. AUTHENTICATION
+
+    1. go to clerk website, it provides modern react based ui along with user management systems.
+    2. follow the steps then, (creating env file for api, creating clerk middleware for authentication, and the code itself.)
+
+    *Middleware is a special function that runs before a request reaches your app's route handler. It acts like a gatekeeper and is useful for handling auth, redirects, and request logic.* 
+    *Route Handler is the function or component that runs in response to a specific URL/path and handles what should be done (show UI, return data, redirect, etc.).*
+
+    3. as suggested by clerk, WRAP the entire app in <ClerkProvider>, so go to layout and wrap the entire thing <ClerkProvider> tag. (DO NOT FORGET TO ADD THE IMPORT CLERKPROVIDER LINE IN THE TOP)
+
+    <SignedOut>
+      <SignInButton />
+    </SignedOut>
+    <SignedIn>
+      <UserButton />
+    </SignedIn>
+
+    copy pasted this code from the clerk overview which gives us the sign-in page and the sign up page, on signing in it takes us to the website, which has a user profile created from the beginning.
+
+    MIDDLEWARE:
+    now if i go to /dashboard, it does not exist, and upon trying to go to /dashboard without signing in i want the website to route to the sign-in page automatically, so we will use MIDDLEWARE.JS to implement this logic
+
+    PROTECTED URLS:
+        use createRouteMatcher to find the urls following a certain pattern (basically like regex for urls) to identify the urls to be protected 
+        so we created a 
+            const isProtected=createRouteMatcher.....
+        now inside:
+            expoert default cleckMiddleware*(async(auth,req)=>{
+                const { userId }=await auth()                     //auth gives userId and all, its an inbuilt function
+            })*
+
+                async: declares a function asynchronous and lets us use await inside it
+                await: holds the functionality of the function until the said value/promise is recieved
+                for multiple values: const [user, posts] = await Promise.all([getUser(), getPosts()]);
+                loop: await Promise.all(items.map(process));
+
+                pregiven injections my clerk:
+                    auth: A function provided by Clerk that gives you the user's auth info (e.g. userId, sessionId, etc.)
+                    req:  The incoming Next.js request object (like NextRequest) — contains URL, cookies, headers, etc.
+
+            now use an if statement to check, if !userId and isProtectedroute
+                i.e there is no userId present and the url belongs to the protected route where redirect is needed
+
+                    const { redirectToSignIn } is an inbuilt function of auth that redirects to signin page
+
+                    return redirectToSignIn{ returnBackUrl: req.url }, this will take the user to login if not logged in, and then after logging in takes the user back to the original 
+                    
+    4. ROUTING
+
+        -> to create routes, INSIDE /app folder, create more folders, each created folder is a route.
+        * to create private routes, which next.js will ignore(the folder not the content inside), wrap the file name inside () parenthesis and whatever folder is inside that, those routes wil be private
+
+        eg. created (auth) private route, inside which we will have a folder called 'sign-in', inside which we will have a folder called '[[...sign-in]]' folder
+
+            [[...xyz]] is a folder type which is a basic convention and is called a optional catch-all route, it will basically catch all /xyz, /xyz/a, xyz/a/b and so on urls.
+
+
+        Now, if we want a wrapper around a folder, lets say the entire auth folder, then create a layout.js file inside auth folder.
+
+
+    5. design the header accordingly
+        ->dont forget to import the necessary tags, like Image, Link 
+        ->in <SignInButton forceRedirectUrl=''> we can force take the user to the mentioned url after login
+
+        you will notice the sign-in page and sign-up page has their clerk's own url and not ours, to fix that:
+            -> go to .env and add own configuration
+            add these lines to make your signin/signup page the default:
+                NEXT_PUBLIC_CLERK_SIGN_IN_URL=xyz
+                NEXT_PUBLIC_CLERK_SIGN_UP_URL=abc
+
+                xyz and abc are the urls i.e /sign-in would be xyz-sign-in
+
+        <SignedIn> is when the user is signed in
+
+        <SignedOut> will work when the user is signed out 
+
+        ->inside SignedIn we can have dashboard link in the nav
+
+        LUCID REACT is a set of vectorized images in the react libraries, it is an icon-library of react
+
+
+        End of User Authentication:
+            summary:
+                created private (auth) folder, with routes to sign-in and sign-up with their own page.jsx
+                updated .env file to change default sign-in and sign-up page url from clerk's to custom
+                designed header
+                setup middleware.js
+
+
+DATABASE:
+
+    1. go to supabase and setup account and project
+        ->Supabase is the Postgres development platform
+
+        give project name and choose password, for fintrack the passwodrw as autogenerated
+        let it finish setting up
+
+        ->click on connect on top
+        ->go to ORMs (An ORM is a tool or library that allows you to interact with a relational database (like PostgreSQL or MySQL) using code instead of raw SQL queries.)
+            we will be using prisma tool since it is more beginner friendly
+        
+        -> copy the codes for the env file and paste it, replace [YOUR-PASSWORD] with the the password of the database
+
+    2. go to ARCJET and set it up
+        ->arcjet is a security providing service which will protect your website from attacks (Bot detection. Rate limiting. Email validation. Attack protection. Data redaction. A developer-first approach to security.)
+
+        ->create new site, give it your project/site name, copy the api key and paste it in env
+    
+    3. go to inngest and set it up
+        -> it is a task scheduler which can schedule tasks and can run important tasks in the background without disrupting the app itself.
+            eg: “Send a follow-up email 3 days after signup”
+            eg. Parsing a large file or running analytics or Calling OpenAI to analyze data
+            eg. Run every night at 12 AM or generate report every sunday                       (this is called a cron job)
+            eg. event based action: When a user signs up, create a welcome record in DB
+            eg. retry if api fails to send back anything, it can retry automatically
+        
+        -> budget alerts, recalculating recurring payments and all will be done using inngest
+
+        ->create organization, download inngest 
+            -> npx inngest-cli@latest dev
+
+            it will run a local server for inngest on port 8288
+                any created inngest functions will show up here localhost:8288
+        
+    4.  SETUP PRISMA
+        npm i -D prisma
+        //install prisma
+       npx prisma init
+        //initiate prisma
+
+            this will create a folder prisma (this is postgresql database) under which schema.prisma will be created with the api keys mapped to variables
+
+    5. CREATE DATABASE SCHEMA
+        ->create User, Transaction, Account, Budget tables with their attributes
+        -> once created, "npx prisma migrate dev --name create-models" run this command in the terminal to migrate and sync the schema with your database in supabase
+            this will create additional files in the prisma folder, here you can see the actual database commands used to create the tables, raw sql codes that is.
+        -> create prisma.js in lib folder
+        ->now when a user logs in we want that data in the database, so create a checkUser.js in lib folder
+ 
+        ->once created, import the checkUser function to a common component, HEADER component. Make sure to make header async function before calling and then await checkUser();
+            now when you login, you can check the supabase database User and see that a new record for the user gets created
+LANDING PAGE:
+
+        -> go to the page.js file in the app folder, the global pag.js, that is our LANDING page
+        -> the first thing the user sees in the website is called the hero component/part, to keep it seperate from server and client logic let us create a seperate component for the hero section. go to components folder and create hero.jsx and import it to app/page.jsx
+
+        ** IF YOU WANT SOMETHING TO BE CLIENT SIDE (like rendering and stuff) WRITE, client pages are dynamic, server sided ones are mostly static
+                    ->"use client"; 
+            on top of the component xyz.jsx file which is in the components folder. otherwise by default everything is done on the server sides
+        when you want to use hooks, make it client sided component
+
+        -> use tags to create the layout of the page in the hero.jsx file
+        -> lets create a custom gradient for the title, so in classname put gradient-title
+            ->then go to global.css and scroll to the bottom and write
+
+                ->@layer utilities{
+                    .gradient{
+                        @apply bg-gradient-to br from-blue-500 to-purple-600;            //applies background color which goes from top right to bottom right
+                    }
+
+                    .gradient-title{
+
+                    }
+                }
+
+                gradient-title will inherit from gradient class.
+
+
+    CREATE DATA FOLDER:
+        which will contain landing.js in which there will be data and information which has to be shown in the landing page
+
+        ////FINISH UP THE LANDING PAGE
+
+
+CREATE OTHER PAGES/ROUTES:
+    follow the routing rules, written in routing section earlier
+    create account,dashboard and transaction route
+    -> in APP folder create a not-found.jsx this is for unwritten routes if user searches them instead of 404 not found it will take to this 
+    
+    Now, we create a dashboardLayout in layout.jsx inside the dashboard folder. we will import the dashboardPage function inside it
+    -> we will wrap the <dashboardPage/> inside <suspense> tag, which basically shows a loading sign when waiting for an server call
+    -> npm i react-spinners , this provides us with a bunch of loading animations and stuff like bar loaders 
+
+SERVER LOGIC/ACTION:
+
+    ACCOUNT CREATION SERVER LOGIC:
+        Create a folder called "actions", which will contain all the server side actions
+
+        ->this is backend logic for account creation == ACCOUNT CREATION API LOGIC
+            we create dashboardAccount.js and there we will basically put all the data we get from the user for account creation and store it in our database, creating account, making default etc    
+                ->write " "use server;" " to mention this is server side logic 
+
+        FRONTEND FOR BACKEND ACCOUNT DATA:
+            Now that the backend logic for creating an account has been done, time to do the frontend part of it, go to dashboard folder and go to page.jsx and make the frontend part which will get the data and give to the backend
+                    ->create a new component called CreateAccountTab which will be used to get the data to create the account.
+                        ->npm i react-hook-form @hookform/resolvers     //this helps is manage our forms and zod is a validation library which will handle error and validation of input of form and hookform/resolvers help us connect the hook form and the zod
+
+                    ->get the drawer component from shadcn ui 
+                    ->we will pass a child prop to the function of CreateAccountTab, We can create a card on clicking which the drawer will get triggered
+                    ->create the card on clicking which the drawer will open, so that card will act as the child prop
+                
+                ->now create a form inside the drawer which we will use to get the data for the backend to create the account
+                    ->create a lib folder inside /app which will contain the schema for our form: schema.js
+                    ->we will use zod to create the schema
+                    ->create the schema, then go to component CreateAccountTab and then configure it 
+                        -> use "useForm()";
+                        ->create the form, more notes in the form itself in createAccountTab.jsx in /components
+        
+        HOOK TO GET THE DATA FROM FRONTEND TO BACKEND:
+                ->now we create the server calls to these, so that we can submit the form
+                ->we have to check if the server calls fails, or if it successful etc, so we need to store it temporarily hence we will use hooks, custom hook
+                    ->create a folder called called hooks in which we create use-fetch since we will be using this server to fetch the details from the form-> data,loading and error
+
+                    *working of the hook*
+                        ->create a function which will handle the logic of all the three (data,loading and error states) when called
+                            ->set loading to true, get the data from callback, and ...args then pass it to acc /// it is the server logic
+                            ->get the arguements from the CreateAccount since we will be using useFetch(CreateAccount)
+                                    **createAccount** is the account creating function logic, its in server action file called DashboardAccounts.js
+                            ->the setData will get the response and will set data will be passed to createAccount to create the account/fill the database details
+                            ->if error, shows error
+
+                            ->finally sets loading to false after this is done
+
+                    ->use Sonner from shadcn ui for popup on error(also called toaster), add it to the layout file
+                    ->add it to the layout of the app
+                    ->use toast in the hook to show any error
+                        
+                    ->now fetch this server logic  in the createAccountTab
+                    ->useFetch(createAccount), this is the server action that we created
+                            const {data:newAccount,
+                                error,
+                                fn: createAccountfn,
+                                loading:CreateAccountLoading
+                            }=useFetch(createAccount)
+
+                            ->each variable for each of the data which is returned by the useFetch hook
+
+                            ->use CreateAccountLoading to set the button logic, if loading then disable and show loading symbol
+                            ->onsubmit wwait for createAccountfn
+                            ->use error and newAccount to show success or fail toaster of account creation
+
+    NOW ON CREATING AN ACCOUNT USING CreateAccountTab, the created account will show up in the database
+
+
+RENDER THE CREATED ACCOUNTS:
+
+    SERVER ACTION TO FETCH THE ACCOUNT:
+        ->in actions folder, under the DashboardAccounts.js file (we are handling all the account related logic in the dashboard page in this one file itself (create and fetch so far))
+        -> FetchUserAccounts()
+            write the logic to see if user exists, then give fetch all accounts where user id is same as the user logged in
+        ->return the accounts in descending order of creation date
+        ->return the count of transactions
+        ->serialize the account (change float to integer values) and return it 
+
+    RENDER IT:
+        ->go to dashboard folder/route then page.jsx 
+        ->create a const to run the FetchUserAccounts();
+        ->if you console.log then you can see the details of the accounts in the console, it gives the details of all fields of the database of the accounts of the user 
+
+        ->to render it, we will create a AccountCard component
+            ->since this is a component we will be using inside dashboard route only, create a folder called "_component" inside the dashboard folder
+                ->next.js ignores the folders starting with _ inside a route 
+            ->take account which is mapping the accounts as prop
+            ->use shadcn UI card component to show the frontend with the details
+
+        ->we are making the entire card a link to open a detail page for the account, using account id
+
+
+        CHANGE DEFAULT ACCOUNT LOGIC WITH THE SWITCH:
+        ->the switch inside the card will toggle default account, if default it will be checked and others will be unchecked, if user clicks or toggles any other switch that will be made default account
+            ->CREATE account.js in /actions which will handle account related logic 'updateDefaultAccount' funtion
+            ->write the logic to check if user exists, find accounts which are default and make them false, then make the account user is switching as default
+            ->return success or error
+            **since this is an server logic write "use server"; on top **
+
+            ->go to accountcard.jsx in /_component and use 'useFetch' whose parameter will be the function we just created 'updateDefaultAccount'
+            ->get the data from useFetch hook
+            ->write logic for atleast 1 default account
+            ->write success or error toast
+            **since we are using hook write "use client"; on top **
+
+ACCOUNT DETAIL PAGE:
+    ->as mentioned before, clicking on the card will take us to a default page of that account
+    ->go to /app/(main)/account/[id] and make page.jsx
+    
+    ACTION/server logic:
+        ->go to /actions/accounts.js write the logic to get the transaction of an account by passing accountId to the function getAccountTransactions(accountId)
+        ->write the logic to check if the user exists
+        ->then find accountId in db where accountId and userId
+        ->include all transactions and the count of total transactions
+        ->if no account then return null
+        ->else serialize everything and return 
+
+    FRONTEND:
+        ->go to /app/(main)/account/[id] and make page.jsx
+        ->get the items from the function
+        ->then display/render it in frontend
+
+SEEDING TRANSACTIONS:
+    ->adding dummy transactions to work with for now 
+    ->from github copied seed.js content and pasted, contains dummy information
+    ->npm i date-fns
+        ->handle dates efficiently
+    ->generates transactions using random function and adds it to the database, under both income and expense category
+    ->just fill the accountId and UserId variables in seed.js from the database
+
+    ->create a folder called api inside /app
+        ->this is to create an api endpoint to call the seed.js
+    ->inside api create seed folder inside which a file called route.js
+    ->so, /app/api/seed/route.js
+
+    **When we say API in web dev, we usually mean: A function or route that is exposed via HTTP**
+    **things inside action folder are SERVER LOGIC, so those are DIRECT SERVER CALLS**
+
+SHOWING TRANSACIONS OF AN ACCOUNT:
+    ->create transactionsTable.jsx in /app/(main)/account for transaction table 
+    ->pass on transactions from an account to it as param
+    ->client side process, so write "use client";
+    ->use shadcnUI table component to show details
+    ->write function to sort and filter 
+    ->there is a categories.js in data folder where all categories are mentioned
+    ->there is a function which assigns color to each of the category
+    ->use that function categoryColors() in the transactiont table
+    ->check if debit then show the amount in red else green
+    ->for recurring add tooltip from shadcn ui
+    ->create a map sort of thing and assign MONTHLY,WEEKLY etc to Monthly,Weekly, to show the appropriate recurring time based on the database returned value
+    ->from shadcn ui use dropdown menu
+    ->this will have edit and delete
+        ->on pressing edit we will route to a page which will take us to the transaction id, so edit/{transaction.id}
+
+    ->make the sorting function logic, create 3 usestates: searchTerm, recurringFilter, typeFilter
+    ->create an input field for search term, and on change call setSearchTerm and set the value of searchTerm
+    ->create delete button which shows up on selecting and funtion handleBulkDelete
+    ->create trash icon which shows up on selecting any filter to clear the filter
+    
+    ->NOW, use "useMemo" for the transaction sorting function, it takes a callback function and a dependency array and it only runs if the dependencies inside the array have changed, only then will it recalculate else it will cache the values that was inside it, example, if i search apple it will return results, if i search apple again it will return the cached values doesnt calculate the results for apple again 
+    ->write the logic for sorting
+
+BULK DELETE TRANSACIONS:
+    ->Go to actions go to accounts.js and create a server action function called bulkDeleteTransaction(transactionIds){}
+    ->check if user is logged in like you do in every function
+    ->find the ids in the transactionIds array from the db
+    ->calculate the new amount left in account based on credit and debit transactions deleted, use reduce function
+
+    ->now to actually udpate and delete the amount inside the database
+        ->use $transaction function given by prisma
+        ->find the ids where we need to deleteMany()
+        ->run a for loop which takes in each entry, and each iteratioon returns [accountId,balanceChange]
+        ->now we update it in the database which increments the balance by balanceChange, if +ve then add, if -ve then subtract
+        ->await ensures each update finishes before moving on to the next one
+
+        ->go to transactionsTable and use "useFetch" custom hook and run the function bulkDeleteTransaction
+        ->create a function handleBulkDelete
+
+ACCOUNT CHARTS:
+    ->npm i recharts
+    ->create a file inside /app/(main)/accounts/_components called AccountCharts.jsx
+    ->go to recharts website and copy a bar chart 
+    ->prepare the data for the chart
+        ->first create the date range for which you want to see the graph (last 7 days, month, year etc)
+        ->create a component (function) have a state for these to manage the selected date, this will be a client component since usestate hook is being used
+        ->we will also be using a useMemo hook because we will be changing the data in the chart, so we need to cache it in here as well for calculations
+        ->use useMemo to find the date range from the current date, use subDays to subtract
+        ->we have created a map of sorts which has mapped values like 1M to 30 and so on which is used to find the useMemo
+        ->now calculate the days range
+        ->use reduce function and acc (accumulator) to find each date's (in the range) credit and debit total which gives us the data we need to work with to create the chart
+        ->we turn the result into an array, sort it and return
+
+        ->now we want to calculate the given range's total amount spent/earned, we have credit and debit values seperately of per day in that range now time to find the total
+            ->total transactions done in the given period
+            ->we will use another useMemo
+                ->take the filterData and for that array, use reduce function to find the total credit and debit
+        
+        DISPLAY THE CHART:
+            ->take a card from shadcnUI
+            ->take select component from shadcnUI
+            ->for the select component, default value is dateRange, and onValueChange={setDateRange}
+            ->convert the DATE_RANGES into an array using map which will take key, and {label} as key,value pairs
+            ->now use the x axis to show date, y axis to show money
+            ->one bar will be credit and the other will be debit
+            ->use <tooltip> to specify toFixed(2)
+            ->mess around with the properties of the tags
+
+BUDGET SETTING:
+    ->this will be on the dashboard
+    ->create a server action for setting the budget, new file in /actions called budget.js
+    ->check if user exists
+    ->find the budget for the given account
+    ->find the start of the month and the end of the month
+    ->aggregate the transactions for the given month using prisma aggregate function
+
+    ->if budget is there then return the budget else return null
+    ->add the total expenses and return it
+
+    CREATE/budget BUDGET:
+        ->write a function called updateBudget()
+        ->check user
+        ->use UPSERT function of prisma, finds user, checks if budget exists, if yes then updates it else creates it
+        ->revalidate path for dashboard
+        ->return success and budget along with serialized amount
+        ->now go to dashboard and then fetch the budget action getCurrentBudget for the default account
+
+        ->go to budgetProgress.jsx and work on the api call of handleUpdateBudget
+        ->we will use useFetch hook which will call updateBudget from /actions
+
+        ->make the button to edit the budget, which will give an input field and 2 buttons, ok and cancel
+        ->on pressing ok both the buttons and the field get disabled till the budget gets updated
+
+        DISPLAY PROGRESS BAR:
+            ->take Progress from shadcnUI
+            ->style it, for that we created extraStyles which will be passed on as props to the code of Progress in the components/ui/Progress.jsx
+
+INNGEST BUDGET ALERT:
+    ->go to inngest next.js documentation on their website
+        ->npx inngest-cli@latest dev
+    ->create a folder inside /app/api/ called inngest, so app/api/inngest/route.js
+    ->so since this is an api endpoint, this is what it will use to communicate /inngest
+    ->now we have to create the inngest client, so go to lib and create a folder called inngest and then create client.js and paste the client code in it from the documentation
+    ->add retry function to it, which if something goes wrong retries with a delay mentioned
+
+    ->create function.js in lib/inngest folder go to inggest documentation to find out how
+    ->now import it in the route.js and write it in the function tab
+    ->now give it data then invoke it
+
+
+    ->now that it has been setup
+    ->go to function, get the cron job code for alerts every 4 hours
+    ->in async component of it, first get the budget
+    ->use include to join tables, and find the default account
+    ->now check budget for each to see if it exceeds the threshold
+    ->if yes, then send the email and update the database
+
+    ->now to send emails, use react email, go to its documentation  
+    ->go to manual setup
+        ->npm install react-email -D -E
+        ->npm install @react-email/components
+    ->add script in json "email":"email dev"
+    ->create a folder called emails in the project folder, this will contain the template.jsx for the email 
+    ->npm run email
+
+    ->now have if statements to check monthly-report or budget-alert email has to be sent and return template accordingly
+    ->make the page
+
+    ->NOW TO SEND EMAIL 
+        ->go to resend.com
+        ->login (git account used here)
+        ->get api keys
+        ->go to env file create RESEND_API_KEY and paste it
+        ->npm i resend
+        ->create new server action, called sendEmail
+
+
+        ->now go to functions.js and then in the //send email part call the function
+
+
+TRANSACTION PAGE:
+    ->app/transaction/create/page.jsx create
+    ->create action transaction.js
+        ->check if it is debit or credit, and add to the variable newBalance accordingly
+        ->then update balance of the account with newBalance
+    ->go to transaction/create/page.jsx
+        
+        ->we need to create a form, so use zod
+            ->go to lib folder which contains schema.js and create transactionSchema
+            ->use superRefine to check conditions after the form is submitted
+                ->if recurring is true but recurringInterval is empty, throw error
+        
+        ->create /app/transaction/_component/transactionForm.jsx
+            ->now, import useForm({resolver:zodResolver(transactionSchema)}) and give default values in the page.jsx 
+        ->make the form
+        ->submit the form and pass on the data to the transaction.js
+
+    -> RATE LIMITING 
+        ->npm i @arcjet/next
+        ->go to arcjet to create rate limiting
+        ->create arcjet.js inside lib folder
+        ->const aj=arcjet({})
+        ->import arcjet from "@arcjet/next"
+        ->pass the api key inside it
+        ->we will make it based on clerk UserId
+        ->set the rules
+        ->export
+
+        ->now go to transaction.js in /actions to add this rate limiting
+        ->get request data for arcjet
+        ->get decision from arcjet protect
+        ->if decision.isDenied then send error
+
+        ->you can check all the requests made, in the arcjet dashboard
+
+RECIEPT SCANNER (FINISHED NOTES):
+
+RECIEPT SCANNER:
+    ->we need to increase file size limit of next.js so go to next.config.mjs and increase it
+    ->we will use gemini ai to implement this feature
+    ->go to gemini ai for devs
+    ->get the api key and put the api key in the env file
+    ->npm i @google/generative-ai
+
+    go to transactions.js
+        ->create a new const genAi = GoogleGenerativeAI
+        ->create new function called scanTransaction
+        ->get file, convert it to arrayBuffer then convert arrayBuffer to base64 string
+        ->provide the prompt
+        ->send the request and wait to generate content
+        ->get the response and convert it to text
+        ->response is in the format JSON xyzxyz JSON so we want to remove the backticks and the json
+        ->use regex to remove this
+        ->parse json and return result
+        ->error handling
+
+    FRONTEND OF AI SCANNER
+        ->go to transactionForm.jsx
+        ->create function handleScanComplete
+        ->fills amount, date, description, category (match ignoring case)
+        ->useFetch
+        ->pass scanTransaction to it
+        ->returns loading, data, fn
+        ->create input type=file hidden with ref
+        ->accept image/*
+        ->capture environment
+        ->onChange handleTransactionScan
+        ->create handleTransactionScan(file)
+        ->check file size <5mb
+        ->call scanfn(file)
+        ->useEffect
+        ->if scannedData && !ScanLoading
+        ->call onScanComplete(scannedData)
+        ->toast success
+        ->create button
+        ->onClick trigger hidden input click
+        ->if loading show spinner + scanning text
+        ->else show camera icon + Scan with AI
+
+    DONE
+        ->all functionalities working
+        ->populates form fields automatically from AI scan
+        ->amount, date, description, category working
+
+
+
+INNGEST CRON JOB FOR RECURRING TRANSACTION:
+    ->we want recurring transaction to automatically add transaction to our database when the time comes 
+    ->go to inngest/functions.js
+    ->create a new function to find out the total recurring transactions
+    ->create event for each of these recurring transactions
+    ->send it to inggest to process
+
+    PROCESS RECURRING TRANSACTIONS: (EVENT BATCHING since separate event for each and every transaction)
+        -> create another function of inngest called processRecurringTransactions
+        -> we will create a THROTTLE
+        -> we will only send 10 requests per user in a minute
+        -> validate the incoming event data (check transactionId and userId)
+        -> fetch the transaction from DB and include the account details
+        -> check if the transaction is due using isTransactionDue() helper
+        -> if not due → skip
+        -> if due → inside a Prisma transaction (db.$transaction):
+            - create a new transaction (copy type, amount, category, description + mark as (Recurring))
+            - update the account balance accordingly (EXPENSE → -amount, INCOME → +amount)
+        - update the original transaction with:
+            * lastProcessed = now
+            * nextRecurringDate = calculateNextRecurringDate()
+    HELPER FUNCTIONS:
+        -> isTransactionDue(transaction)
+            - returns true if no lastProcessed exists
+            - or if nextRecurringDate <= today
+        -> calculateNextRecurringDate(startDate, interval)
+            - DAILY → +1 day
+            - WEEKLY → +7 days
+            - MONTHLY → +1 month
+            - YEARLY → +1 year
+    ADD TO ROUTE:
+        -> go to /api/inngest/route.js
+        -> import both functions:
+            - triggerRecurringTransactions
+            - processRecurringTransaction
+        -> add them to the exported inngest handler so they are registered
+
+EDIT TRANSACTION
+
+    -> GET TRANSACTION (getTransaction(id))
+      -> Authenticate user with Clerk and get userId
+      -> Check if user exists in database
+      -> Find transaction with matching id and userId
+      -> If transaction not found → throw error
+      -> Return serialized transaction
+
+    -> UPDATE TRANSACTION (updateTransaction(id, data))
+      -> Authenticate user with Clerk and get userId
+      -> Check if user exists in database
+      -> Fetch the original transaction including account details
+      -> Calculate old balance change
+      -> if type = EXPENSE → -amount
+      -> if type = INCOME → +amount
+        -> Calculate new balance change from updated data
+        -> Calculate netBalanceChange = newBalanceChange - oldBalanceChange
+        -> Execute inside db.$transaction
+        -> Update transaction with new data
+        -> if recurring and interval exists → calculate nextRecurringDate
+        -> Update account balance → increment by netBalanceChange
+        -> Revalidate affected paths
+        -> /dashboard
+        -> /account/[accountId]
+        -> Return updated transaction (serialized)
+    
+    ->UPDATE TransactionForm to accomodate editing
+
+LOADING.jsx:
+    ->added loading.jsx file to account and transaction for a smoother experience 
+
+MONTHLY REPORT EMAIL:
+    -> Go to /inngest/functions.js
+    -> Make sure the function fetches the correct user data for the month.
+    -> Pull totalIncome, totalExpenses, and byCategory for the user.
+    -> Calculate netSavings = totalIncome - totalExpenses.
+    -> Ensure the category names are capitalized before rendering in the email.
+    -> Display Income, Expenses, and Net Savings in separate cards.
+    -> Build a Spending Breakdown section showing each category and amount.
+    -> Include Key Insights section, either from AI or fallback text.
+    -> Add a button linking to the user’s dashboard.
+    -> Make sure header and footer match branding and are consistent.
+
+MONTHLY AI INSIGHT FOR EMAIL:
+    -> Use generateFinancialInsights function to create 3 actionable insights.
+    -> Pass in the user’s stats and the month.
+    -> Ensure the prompt clearly states that Finix is the budgeting app (no advice to use another app).
+    -> Use INR currency formatting (₹) in the prompt.
+    -> Ensure AI returns exactly 3 insights in a valid JSON array.
+    -> If AI fails, use fallback insights.
+    -> Clean the AI response: remove markdown, extra text, and trailing commas.
+    -> Insights should be friendly, encouraging, actionable, and relevant.
+
+DASHBOARD OVERVIEW COMPONENT:
+    -> Go to the file where DashboardOverview is defined.
+    -> Accept accounts and transactions as props.
+    -> Use useState to track the selectedAccountId.
+    -> Default to the account with isDefault true, or the first account.
+
+    -> Filter transactions to only include those for the selectedAccountId.
+    -> Sort and slice transactions to get the 5 most recent for the Recent Transactions card.
+
+    -> Calculate current month expenses by filtering EXPENSE transactions for the current month and year.
+    -> Group expenses by category using reduce.
+    -> Prepare data for the pie chart with { name: category, value: amount }.
+
+    -> Recent Transactions Card:
+     -> Display a Select dropdown to switch accounts.
+     -> If no transactions, show "No recent transactions".
+     -> Otherwise, display each transaction with description, date, and amount.
+     -> Use color coding: red for expenses, green for income.
+     -> Add arrow icons (ArrowDownRight for expenses, ArrowUpRight for income).
+
+    -> Monthly Expense Breakdown Card:
+     -> If no expenses this month, show "No expenses this month".
+     -> Otherwise, render a ResponsiveContainer with a PieChart.
+     -> Map each category to a colored Cell using the COLORS array.
+     -> Add labels showing category name and amount.
+     -> Include a Tooltip formatted in $ (or update to ₹ if needed).
+     -> Include a Legend for category colors.
+
+    -> Use utility cn to conditionally apply Tailwind classes for text colors.
+    -> Maintain consistent styling using Card, CardHeader, CardTitle, CardContent.
+    -> Make sure the component is fully responsive for small and medium screens.
+        
+DELETE ACCOUNT
+    ->create a function to delete in accounts.js
+    ->create a delete popup component that asks user to confirm
+    ->delete
+
+PROTECTION AGAINST ATTACKS AND BOTS
+    ->go to middleware.js and import arcjet
+    ->write the rules to block all bots except go_http which allows inngest to work and alloww website to show on search engines
+    ->export first aj then clerk, to ensure first protection of site then protection of user/auth
+
+DEPLOYMENT:
+    ->

@@ -1,0 +1,99 @@
+Useful tailwind tips:
+
+in every tag WRITE * classname="" * 
+    eg. <div className="xyz"> </div>
+    
+    where, xyz will be your styling
+
+
+Commands used so far:
+
+FOOTER IN LAYOUT:
+    1. text-center (center aligns the text)
+    2. bg-blue-50  (sets background color, blue, intensity 50)
+    3. container mx-auto (creates a container for each screen size, keeps things in the screen)
+    4. text-gray-400 (text color)
+    5. text-4xl (text size)
+
+HEADER IN LAYOUT:
+    1. fixed top-0 (fix the position to top of the screen)
+    2. container – Sets a responsive fixed-width wrapper with padding for different screen sizes, but kinda shortens the div, so use w-full or w-auto when required if you want to control padding
+    3. mx-auto  (horizontally centers the container) (MX=MARGIN HORIZONTAL) 
+    4. px-4 – Adds horizontal padding of 1rem (16px) on both sides
+    5. py-4 – Adds vertical padding of 1rem (16px) top and bottom
+    6. flex – Turns the <nav> into a flexbox container, i.e things are besides each other instead of next line, by default is row flex
+    7. items-center – Vertically aligns items to the center inside the flexbox
+    8. justify-between – Spaces the flex children to the far left and right with space in between  
+
+    *Image, use proportional h and w values to what is visible on the screen
+    8.1 use priority to load the icon in image since its the website logo
+
+    9. use LayoutDashboard from lucid-react library for dashboard icon, there are a LOT of icons in this library.
+        in <span>, we use "hidden md:inline" (removes the text and only shows icon when the screen is below the medium size)
+        in <LINK> we can use hover:text-blue-600 (on hovering this effect will take place)
+    10. space-x-4 (horizontal margin)
+    11. to adjust the user icon, go to <UserButton> inside it have <UserButton appearance={{
+            elements:{
+                avatarBox: !h=10 !w-10
+            }
+        }}
+        to configure it
+
+        ** IF SOMETHING DOESNT WORK, LIKE CHANGING HEIGHT OR WIDTH AS IT IS BEING OVERWRITTEN INTERNALLY THEN USE ! , eg. !h-10 will force height to be 10
+MAIN IN LAYOUT:
+    1. min-h-screen (minimum view height to fit the screen)
+
+AUTH LAYOUT:
+    1. flex justify-center (justifies the content inside to the center)
+
+HERO.jsx:
+
+    1. className='text-5xl md:text-8xl lg:text-[105px] pb-6 gradient-title'
+         text size for each screen size can be mentioned, and with [] custom size can be given
+    2. max-w-2xl
+            ->how much space should a paragraph take, 2xl then the lines will go to the next line instead of taking up the entire screen
+                        eg. hello this sentence is long and will cover half or more than that in the screen.
+        now with max-w-2xl:                 hello this sentence is long and will cover half
+                                                 or more than that in the screen.
+            
+            
+GLOBAL.CSS
+
+    @layer utilities{
+        .gradient{
+            @apply bg-gradient-to br from-blue-500 to-purple-600;    \\apply background color gradient (from top right) to bottom right from blue to purple
+        }
+        .gradient-title{
+            @apply font-extrabold tracking-tighter pr-2 pb-2 text-transparent bg-clip-text;
+        }
+    }
+
+            **BG-CLIP-TEXT and text-transparent IS IMPORTANT IF YOU WANT TO FILL THE TEXT WITH BACKGROUND color
+                -> text-transparent makes the text transparent, and when you do bg-clip-text it basically gives the shape of the text for the background color to fill inside.
+
+DASHBOARD/PAGE.JSX :
+    className="flex flex-col items-center justify-center text-muted-foreground h-full pt-5
+
+            ->flex=lets us use flex box properties
+            ->flex col- stacks things vertical, on top of each other
+            ->items-center= centers thing according to the cross axis, since flex col is vertical, cross axis is horizontal so things would be aligned center from left to right
+            ->justify-center= centers things according to the main axis, so from top to bottom, items will be in the center
+            ->text-muted-foreground= applies a muted text color, gray-ish
+            ->h-full= element height is 100% of the parent container
+            
+
+
+
+
+
+
+
+
+
+*** if you want to do something lets say hovering on parent div make changes to a child div, put "group" in parent and then group-hover: in child div where you want the changes to occur on hovering over parent itself
+
+                ///////////////text-[#06b6d4] main theme of the website
+
+                ///border border-[#06b6d4] text-[#06b6d4] hover:bg-[#06b6d4] hover:text-white transition flex items-center gap-2 buttons after login
+
+
