@@ -89,6 +89,10 @@ const AddTransactionForm = ({
     (category) => category.type === type
   );
 
+  const sortedCategories = filteredCategories.sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
+
   const onSubmit = async (data) => {
     const formData = {
       ...data,
@@ -234,7 +238,7 @@ const AddTransactionForm = ({
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
           <SelectContent>
-            {filteredCategories.map((category) => (
+            {sortedCategories.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
               </SelectItem>
