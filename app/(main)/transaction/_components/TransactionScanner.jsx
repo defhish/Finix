@@ -37,7 +37,6 @@ const TransactionScanner = ({ onScanComplete }) => {
         ref={fileInputRef}
         className="hidden"
         accept="image/*"
-        capture="environment"
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleTransactionScan(file);
