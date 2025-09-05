@@ -44,7 +44,7 @@ export default function Home() {
 
       <section className="py-20">
         <div className="items-center text-center container mx-auto px-4">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800">Let's Get Started</h2>
+        <h2 className="text-3xl font-bold mb-6 text-gray-800">Let&apos;s Get Started</h2>
         <p className="mb-6 text-gray-600">
           Your journey with Finix begins with one click.
         </p>
