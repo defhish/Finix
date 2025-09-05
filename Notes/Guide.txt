@@ -724,4 +724,5 @@ PROTECTION AGAINST ATTACKS AND BOTS
     ->export first aj then clerk, to ensure first protection of site then protection of user/auth
 
 DEPLOYMENT:
-    ->
+    ->go to inngest docs to see how to deploy our inngest as well
+        ->connect vercel account with inngest
